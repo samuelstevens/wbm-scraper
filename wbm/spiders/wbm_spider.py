@@ -23,11 +23,22 @@ class WaybackMachineSpider(scrapy.Spider):
         ]
     )
 
-    # TODO: get list of urls from common crawl or similar
-    start_urls = ["https://samuelstevens.me"]
+    def __init__(
+        self, domains=None, domain_file=None, root="downloaded", *args, **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self.root = root
 
-    # TODO: set this via command line arg
-    root = "downloaded"
+        self.start_urls = []
+
+        if domains:
+            domains = domains.split(",")
+            self.start_urls.extend(domains)
+
+        if domain_file:
+            with open(domain_file) as fd:
+                domains = [line.strip() for line in fd]
+            self.start_urls.extend(domains)
 
     def start_requests(self):
         """
@@ -63,7 +74,7 @@ class WaybackMachineSpider(scrapy.Spider):
 
         for timestamp, url, mimetype in body:
             if mimetype not in self.good_mimetypes:
-                self.logger.debug("Skipping bad mimetype '%s'", mimetype)
+                # self.logger.debug("Skipping bad mimetype '%s' (%s)", mimetype, url)
                 continue
 
             url = urllib.parse.urlparse(url)._replace(params="", query="", fragment="")
